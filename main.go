@@ -19,6 +19,16 @@ var albums = []album{
 	{ID: "3", Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
 }
 
+
+func main(){
+	router := gin.Default()
+
+	router.GET("/get-all-albums", getAlbums)
+	router.POST("/post-album", postAlbums)
+	router.GET("/get-album/:id", getAlbumById)
+	router.Run("localhost:8076")
+}
+
 // getAlbums responds with the list of all albums as JSON.
 func getAlbums(c *gin.Context){
 	c.JSON(http.StatusOK, albums)
@@ -27,6 +37,7 @@ func getAlbums(c *gin.Context){
 func postAlbums(c *gin.Context){
 	var newAlbum album
 	if err := c.BindJSON(&newAlbum); err != nil{
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return 
 	}
 	
@@ -34,10 +45,15 @@ func postAlbums(c *gin.Context){
 	c.IndentedJSON(http.StatusCreated, newAlbum)
 }
 
-func main(){
-	router := gin.Default()
+func getAlbumById(c *gin.Context){
+	id := c.Param("id")
 
-	router.GET("/get-albums", getAlbums)
-
-	router.Run("localhost:8076")
+	for _, a := range albums{
+		if a.ID == id{
+			c.JSON(http.StatusOK, a)
+			return
+		}
+	}
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Album not found"})
 }
+
